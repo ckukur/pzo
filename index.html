@@ -1,0 +1,191 @@
+<!--
+Project: Tabulator — Static Interactive Table
+File: index.html
+
+Instructions:
+- Save this file as `index.html`.
+- Open it locally in a browser or deploy to any static host (GitHub Pages, Netlify, Vercel).
+
+Features included:
+- Tabulator table with virtual DOM, sortable/filterable columns, column visibility toggle
+- CSV export and CSV import (client-side)
+- Global search, pagination, column resizing and moving
+- Row selection and row editing
+- Simple responsive styling
+
+Want additional features? I can:
+- add server-side paging (example Node/Python API)
+- add column pinning / grouping / custom formatters
+- create a GitHub repo + GitHub Pages config
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive Table — Tabulator (Static)</title>
+
+  <!-- Tabulator CSS -->
+  <link href="https://unpkg.com/tabulator-tables@6.3.3/dist/css/tabulator.min.css" rel="stylesheet">
+
+  <style>
+    :root{ --gap:12px; }
+    body{ font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:20px; color:#111; }
+    header{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .controls input[type="text"]{ padding:8px 10px; border-radius:6px; border:1px solid #ddd; min-width:220px; }
+    .btn{ padding:8px 12px; border-radius:6px; border:1px solid #bbb; background:#fff; cursor:pointer; }
+    .btn:active{ transform:translateY(1px); }
+    #table{ margin-top:10px; }
+    footer{ margin-top:18px; font-size:13px; color:#555; }
+    @media (max-width:600px){ header{ flex-direction:column; align-items:flex-start; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 style="margin:0; font-size:20px">Interactive Table — Tabulator</h1>
+      <div style="font-size:13px; color:#666">Static site example — open locally or host on GitHub Pages / Netlify</div>
+    </div>
+
+    <div class="controls">
+      <input id="search" type="text" placeholder="Global search..." />
+      <label class="btn" for="file-upload" style="display:inline-block">Upload CSV</label>
+      <input id="file-upload" type="file" accept=".csv" style="display:none" />
+      <button id="download-csv" class="btn">Download CSV</button>
+      <button id="toggle-city" class="btn">Toggle City</button>
+      <button id="clear-filters" class="btn">Clear Filters</button>
+    </div>
+  </header>
+
+  <div id="table"></div>
+
+  <footer>
+    Features: sorting, filtering, column visibility, editing, CSV import/export, pagination, selection.  
+    Need server-side pagination or a Python/Node sample? Ask and I'll add it.
+  </footer>
+
+  <!-- Tabulator JS -->
+  <script src="https://unpkg.com/tabulator-tables@6.3.3/dist/js/tabulator.min.js"></script>
+
+  <script>
+    // Example dataset -- replace with your own or upload CSV
+    const tabledata = [
+      {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
+      {id:2, name:"Bob", age:24, city:"Split", score:72},
+      {id:3, name:"Carol", age:41, city:"Rijeka", score:95},
+      {id:4, name:"Dan", age:29, city:"Zadar", score:67},
+      {id:5, name:"Eve", age:34, city:"Osijek", score:81},
+      {id:6, name:"Fiona", age:27, city:"Pula", score:74},
+      {id:7, name:"Goran", age:45, city:"Dubrovnik", score:92},
+      {id:8, name:"Hana", age:22, city:"Varazdin", score:70},
+      {id:9, name:"Ivan", age:38, city:"Karlovac", score:85},
+      {id:10, name:"Jasna", age:31, city:"Vukovar", score:79},
+    ];
+
+    // Keep track of city visibility
+    let cityVisible = true;
+
+    // Create Tabulator
+    const table = new Tabulator("#table", {
+      data: tabledata,
+      layout: "fitDataStretch", // fit columns to width
+      pagination: "local",
+      paginationSize: 5,
+      selectable: true,
+      movableColumns: true,
+      resizableColumns: true,
+      reactiveData: true, // enable reactive updates when table data changes
+      height: "500px",
+      placeholder: "No Data Available",
+      initialSort:[{column:"id", dir:"asc"}],
+      columns: [
+        {title:"ID", field:"id", width:70, headerFilter:"number", frozen:true},
+        {title:"Name", field:"name", headerFilter:"input", editor:"input"},
+        {title:"Age", field:"age", hozAlign:"center", headerFilter:"number", editor:"number"},
+        {title:"City", field:"city", headerFilter:"input", visible:cityVisible},
+        {title:"Score", field:"score", hozAlign:"center", headerFilter:"number", formatter:"progress"},
+      ],
+      rowClick: function(e, row){ row.toggleSelect(); },
+    });
+
+    // Global search
+    const searchInput = document.getElementById('search');
+    let searchTimeout = null;
+    searchInput.addEventListener('input', (ev) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const v = ev.target.value.trim();
+        if (!v){
+          table.clearFilter(true);
+          return;
+        }
+        // apply an OR filter across multiple fields
+        table.setFilter([
+          {field: 'name', type: 'like', value: v},
+          {field: 'city', type: 'like', value: v},
+          {field: 'id', type: 'like', value: v},
+        ]);
+      }, 150);
+    });
+
+    // Download CSV
+    document.getElementById('download-csv').addEventListener('click', () => {
+      table.download('csv', 'table-data.csv');
+    });
+
+    // Toggle City column visibility
+    document.getElementById('toggle-city').addEventListener('click', () => {
+      cityVisible = !cityVisible;
+      table.toggleColumn('city');
+    });
+
+    // Clear filters
+    document.getElementById('clear-filters').addEventListener('click', () => {
+      searchInput.value = '';
+      table.clearFilter(true);
+      table.clearSort();
+    });
+
+    // CSV import (client-side)
+    const fileInput = document.getElementById('file-upload');
+    fileInput.addEventListener('change', (ev) => {
+      const file = ev.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e){
+        try{
+          const text = e.target.result;
+          const parsed = csvToJson(text);
+          // convert numeric fields if possible
+          const normalized = parsed.map((r,i)=>({id: r.id ? Number(r.id) : i+1, name:r.name || '', age: r.age ? Number(r.age) : null, city: r.city || '', score: r.score ? Number(r.score) : null}));
+          table.setData(normalized);
+        }catch(err){
+          alert('Failed to parse CSV: ' + err.message);
+        }
+      }
+      reader.readAsText(file);
+      // reset so same file can be uploaded again
+      ev.target.value = '';
+    });
+
+    // Very small CSV parser (handles simple CSVs without quoted newlines)
+    function csvToJson(csv){
+      const lines = csv.split(/\r\n|\n/).filter(l=>l.trim().length>0);
+      if(lines.length<1) return [];
+      const headers = lines[0].split(',').map(h=>h.trim());
+      return lines.slice(1).map(line => {
+        const cols = line.split(',');
+        const obj = {};
+        headers.forEach((h, i)=>{ obj[h] = cols[i] !== undefined ? cols[i].trim() : ''; });
+        return obj;
+      });
+    }
+
+    // Expose table to window for debugging
+    window._tabulator_table = table;
+
+  </script>
+</body>
+</html>
