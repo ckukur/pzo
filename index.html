@@ -3,166 +3,44 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Interactive Table — Tabulator</title>
+  <title>Simple Tabulator Table</title>
 
   <!-- Tabulator CSS -->
   <link href="https://unpkg.com/tabulator-tables@6.3.3/dist/css/tabulator.min.css" rel="stylesheet">
-  
-  <!-- PapaParse CSV parser -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-+l0DxYwLU+aGvkmh2DzXvH+Uc1H/E0U5DR9Xq8tK+dxuUg6ecYt9bkLKkYGBu7NZP6NGD2kVRC5bqD1xryqfZA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <style>
-    :root{ --gap:12px; }
-    body{ font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:20px; color:#111; }
-    header{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
-    .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .controls input[type="text"]{ padding:8px 10px; border-radius:6px; border:1px solid #ddd; min-width:220px; }
-    .btn{ padding:8px 12px; border-radius:6px; border:1px solid #bbb; background:#fff; cursor:pointer; }
-    .btn:active{ transform:translateY(1px); }
-    #table{ margin-top:10px; }
-    footer{ margin-top:18px; font-size:13px; color:#555; }
-    @media (max-width:600px){ header{ flex-direction:column; align-items:flex-start; } }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #table { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1 style="margin:0; font-size:20px">Interactive Table — Tabulator</h1>
-      <div style="font-size:13px; color:#666">Static site example — open locally or host on GitHub Pages / Netlify</div>
-    </div>
-
-    <div class="controls">
-      <input id="search" type="text" placeholder="Global search..." />
-      <label class="btn" for="file-upload" style="display:inline-block">Upload CSV</label>
-      <input id="file-upload" type="file" accept=".csv" style="display:none" />
-      <button id="download-csv" class="btn">Download CSV</button>
-      <button id="toggle-city" class="btn">Toggle City</button>
-      <button id="clear-filters" class="btn">Clear Filters</button>
-      <button id="add-row" class="btn">+ Add Row</button>
-    </div>
-  </header>
-
+  <h1>Simple Tabulator Table</h1>
   <div id="table"></div>
-
-  <footer>
-    Features: sorting, filtering, column visibility, editing, CSV import/export, pagination, selection.
-  </footer>
 
   <!-- Tabulator JS -->
   <script src="https://unpkg.com/tabulator-tables@6.3.3/dist/js/tabulator.min.js"></script>
 
   <script>
-    // Sample dataset
+    // Sample data
     const tabledata = [
       {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
       {id:2, name:"Bob", age:24, city:"Split", score:72},
       {id:3, name:"Carol", age:41, city:"Rijeka", score:95},
-      {id:4, name:"Dan", age:29, city:"Zadar", score:67},
-      {id:5, name:"Eve", age:34, city:"Osijek", score:81},
-      {id:6, name:"Fiona", age:27, city:"Pula", score:74},
-      {id:7, name:"Goran", age:45, city:"Dubrovnik", score:92},
-      {id:8, name:"Hana", age:22, city:"Varazdin", score:70},
-      {id:9, name:"Ivan", age:38, city:"Karlovac", score:85},
-      {id:10, name:"Jasna", age:31, city:"Vukovar", score:79},
     ];
 
-    let cityVisible = true;
-
+    // Initialize Tabulator
     const table = new Tabulator("#table", {
       data: tabledata,
-      layout: "fitDataStretch",
-      pagination: "local",
-      paginationSize: 5,
-      selectable: true,
-      movableColumns: true,
-      resizableColumns: true,
-      reactiveData: true,
-      height: "500px",
-      placeholder: "No Data Available",
-      initialSort:[{column:"id", dir:"asc"}],
-      columns: [
-        {title:"ID", field:"id", width:70, headerFilter:"number", frozen:true},
-        {title:"Name", field:"name", headerFilter:"input", editor:"input"},
-        {title:"Age", field:"age", hozAlign:"center", headerFilter:"number", editor:"number"},
-        {title:"City", field:"city", headerFilter:"input", visible:cityVisible},
-        {title:"Score", field:"score", hozAlign:"center", headerFilter:"number", formatter:"progress"},
-      ],
-      rowClick: function(e, row){ row.toggleSelect(); },
+      layout:"fitColumns",
+      height:"300px",
+      columns:[
+        {title:"ID", field:"id", width:50},
+        {title:"Name", field:"name", editor:"input"},
+        {title:"Age", field:"age", editor:"number"},
+        {title:"City", field:"city", editor:"input"},
+        {title:"Score", field:"score", editor:"number"},
+      ]
     });
-
-    // Global search
-    const searchInput = document.getElementById('search');
-    let searchTimeout = null;
-    searchInput.addEventListener('input', (ev) => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        const v = ev.target.value.trim();
-        if (!v){
-          table.clearFilter(true);
-          return;
-        }
-        table.setFilter([
-          {field: 'name', type: 'like', value: v},
-          {field: 'city', type: 'like', value: v},
-          {field: 'id', type: 'like', value: v},
-        ]);
-      }, 150);
-    });
-
-    // Download CSV
-    document.getElementById('download-csv').addEventListener('click', () => {
-      table.download('csv', 'table-data.csv');
-    });
-
-    // Toggle City column
-    document.getElementById('toggle-city').addEventListener('click', () => {
-      cityVisible = !cityVisible;
-      table.toggleColumn('city');
-    });
-
-    // Clear filters
-    document.getElementById('clear-filters').addEventListener('click', () => {
-      searchInput.value = '';
-      table.clearFilter(true);
-      table.clearSort();
-    });
-
-    // Add Row button
-    document.getElementById('add-row').addEventListener('click', () => {
-      const nextId = table.getData().length + 1;
-      table.addRow({id: nextId, name:"", age:null, city:"", score:null}, true);
-    });
-
-    // CSV upload with PapaParse
-    const fileInput = document.getElementById('file-upload');
-    fileInput.addEventListener('change', (ev) => {
-      const file = ev.target.files[0];
-      if(!file) return;
-
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          const normalized = results.data.map((r,i) => ({
-            id: r.id ? Number(r.id) : i+1,
-            name: r.name || '',
-            age: r.age ? Number(r.age) : null,
-            city: r.city || '',
-            score: r.score ? Number(r.score) : null
-          }));
-          table.setData(normalized);
-        },
-        error: function(err) {
-          alert('CSV parsing error: ' + err.message);
-        }
-      });
-
-      ev.target.value = '';
-    });
-
-    // Expose table for debugging
-    window._tabulator_table = table;
   </script>
 </body>
 </html>
-
