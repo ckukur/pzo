@@ -1,33 +1,15 @@
-<!--
-Project: Tabulator — Static Interactive Table
-File: index.html
-
-Instructions:
-- Save this file as `index.html`.
-- Open it locally in a browser or deploy to any static host (GitHub Pages, Netlify, Vercel).
-
-Features included:
-- Tabulator table with virtual DOM, sortable/filterable columns, column visibility toggle
-- CSV export and CSV import (client-side)
-- Global search, pagination, column resizing and moving
-- Row selection and row editing
-- Simple responsive styling
-
-Want additional features? I can:
-- add server-side paging (example Node/Python API)
-- add column pinning / grouping / custom formatters
-- create a GitHub repo + GitHub Pages config
--->
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Interactive Table — Tabulator (Static)</title>
+  <title>Interactive Table — Tabulator</title>
 
   <!-- Tabulator CSS -->
   <link href="https://unpkg.com/tabulator-tables@6.3.3/dist/css/tabulator.min.css" rel="stylesheet">
+  
+  <!-- PapaParse CSV parser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-+l0DxYwLU+aGvkmh2DzXvH+Uc1H/E0U5DR9Xq8tK+dxuUg6ecYt9bkLKkYGBu7NZP6NGD2kVRC5bqD1xryqfZA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <style>
     :root{ --gap:12px; }
@@ -56,21 +38,21 @@ Want additional features? I can:
       <button id="download-csv" class="btn">Download CSV</button>
       <button id="toggle-city" class="btn">Toggle City</button>
       <button id="clear-filters" class="btn">Clear Filters</button>
+      <button id="add-row" class="btn">+ Add Row</button>
     </div>
   </header>
 
   <div id="table"></div>
 
   <footer>
-    Features: sorting, filtering, column visibility, editing, CSV import/export, pagination, selection.  
-    Need server-side pagination or a Python/Node sample? Ask and I'll add it.
+    Features: sorting, filtering, column visibility, editing, CSV import/export, pagination, selection.
   </footer>
 
   <!-- Tabulator JS -->
   <script src="https://unpkg.com/tabulator-tables@6.3.3/dist/js/tabulator.min.js"></script>
 
   <script>
-    // Example dataset -- replace with your own or upload CSV
+    // Sample dataset
     const tabledata = [
       {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
       {id:2, name:"Bob", age:24, city:"Split", score:72},
@@ -84,19 +66,17 @@ Want additional features? I can:
       {id:10, name:"Jasna", age:31, city:"Vukovar", score:79},
     ];
 
-    // Keep track of city visibility
     let cityVisible = true;
 
-    // Create Tabulator
     const table = new Tabulator("#table", {
       data: tabledata,
-      layout: "fitDataStretch", // fit columns to width
+      layout: "fitDataStretch",
       pagination: "local",
       paginationSize: 5,
       selectable: true,
       movableColumns: true,
       resizableColumns: true,
-      reactiveData: true, // enable reactive updates when table data changes
+      reactiveData: true,
       height: "500px",
       placeholder: "No Data Available",
       initialSort:[{column:"id", dir:"asc"}],
@@ -121,7 +101,6 @@ Want additional features? I can:
           table.clearFilter(true);
           return;
         }
-        // apply an OR filter across multiple fields
         table.setFilter([
           {field: 'name', type: 'like', value: v},
           {field: 'city', type: 'like', value: v},
@@ -135,7 +114,7 @@ Want additional features? I can:
       table.download('csv', 'table-data.csv');
     });
 
-    // Toggle City column visibility
+    // Toggle City column
     document.getElementById('toggle-city').addEventListener('click', () => {
       cityVisible = !cityVisible;
       table.toggleColumn('city');
@@ -148,44 +127,42 @@ Want additional features? I can:
       table.clearSort();
     });
 
-    // CSV import (client-side)
+    // Add Row button
+    document.getElementById('add-row').addEventListener('click', () => {
+      const nextId = table.getData().length + 1;
+      table.addRow({id: nextId, name:"", age:null, city:"", score:null}, true);
+    });
+
+    // CSV upload with PapaParse
     const fileInput = document.getElementById('file-upload');
     fileInput.addEventListener('change', (ev) => {
       const file = ev.target.files[0];
       if(!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e){
-        try{
-          const text = e.target.result;
-          const parsed = csvToJson(text);
-          // convert numeric fields if possible
-          const normalized = parsed.map((r,i)=>({id: r.id ? Number(r.id) : i+1, name:r.name || '', age: r.age ? Number(r.age) : null, city: r.city || '', score: r.score ? Number(r.score) : null}));
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          const normalized = results.data.map((r,i) => ({
+            id: r.id ? Number(r.id) : i+1,
+            name: r.name || '',
+            age: r.age ? Number(r.age) : null,
+            city: r.city || '',
+            score: r.score ? Number(r.score) : null
+          }));
           table.setData(normalized);
-        }catch(err){
-          alert('Failed to parse CSV: ' + err.message);
+        },
+        error: function(err) {
+          alert('CSV parsing error: ' + err.message);
         }
-      }
-      reader.readAsText(file);
-      // reset so same file can be uploaded again
+      });
+
       ev.target.value = '';
     });
 
-    // Very small CSV parser (handles simple CSVs without quoted newlines)
-    function csvToJson(csv){
-      const lines = csv.split(/\r\n|\n/).filter(l=>l.trim().length>0);
-      if(lines.length<1) return [];
-      const headers = lines[0].split(',').map(h=>h.trim());
-      return lines.slice(1).map(line => {
-        const cols = line.split(',');
-        const obj = {};
-        headers.forEach((h, i)=>{ obj[h] = cols[i] !== undefined ? cols[i].trim() : ''; });
-        return obj;
-      });
-    }
-
-    // Expose table to window for debugging
+    // Expose table for debugging
     window._tabulator_table = table;
-
   </script>
 </body>
 </html>
+
