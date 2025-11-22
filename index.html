@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tabulator Table with Button</title>
+  <title>Tabulator Table Frame Test</title>
 
   <!-- Tabulator CSS -->
   <link href="https://unpkg.com/tabulator-tables@6.3.3/dist/css/tabulator.min.css" rel="stylesheet">
 
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    #table { margin-top: 20px; height: 300px; border:1px solid #ccc; }
+    #table { margin-top: 20px; height: 300px; border: 1px solid #ccc; }
     .btn { padding:6px 12px; border:1px solid #999; border-radius:4px; cursor:pointer; margin-bottom:10px; }
   </style>
 </head>
 <body>
-  <h1>Tabulator Table Test</h1>
+  <h1>Tabulator Table Frame Test</h1>
 
   <button class="btn" onclick="alert('Button works')">Test Button</button>
 
@@ -25,17 +25,20 @@
   <script src="https://unpkg.com/tabulator-tables@6.3.3/dist/js/tabulator.min.js"></script>
 
   <script>
-    window.addEventListener("DOMContentLoaded", function() {
+    // Run Tabulator after full page load
+    window.onload = function() {
       const tabledata = [
         {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
         {id:2, name:"Bob", age:24, city:"Split", score:72},
         {id:3, name:"Carol", age:41, city:"Rijeka", score:95},
       ];
 
-      // Initialize Tabulator
-      new Tabulator("#table", {
+      // Initialize Tabulator with explicit height
+      const table = new Tabulator("#table", {
         data: tabledata,
         layout:"fitColumns",
+        height:"100%", // use 100% of the div's height
+        placeholder:"No Data Available",
         columns:[
           {title:"ID", field:"id", width:50},
           {title:"Name", field:"name", editor:"input"},
@@ -44,7 +47,7 @@
           {title:"Score", field:"score", editor:"number"},
         ]
       });
-    });
+    };
   </script>
 </body>
 </html>
