@@ -3,23 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Simple Tabulator Table</title>
+  <title>Working Tabulator Table</title>
 
   <!-- Tabulator CSS -->
   <link href="https://unpkg.com/tabulator-tables@6.3.3/dist/css/tabulator.min.css" rel="stylesheet">
 
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    #table { margin-top: 20px; height: 300px; }
-    .btn { padding:6px 12px; border-radius:4px; border:1px solid #ccc; margin-right:6px; cursor:pointer; }
+    #table { margin-top: 20px; height: 300px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <h1>Simple Tabulator Table</h1>
-
-  <div class="controls">
-    <button class="btn" onclick="alert('Button works')">Test Button</button>
-  </div>
+  <h1>Working Tabulator Table</h1>
 
   <div id="table"></div>
 
@@ -27,18 +22,20 @@
   <script src="https://unpkg.com/tabulator-tables@6.3.3/dist/js/tabulator.min.js"></script>
 
   <script>
-    // Ensure the table initializes after the page is fully loaded
-    window.onload = function() {
+    // Run after page fully loads
+    window.addEventListener("DOMContentLoaded", function() {
+      // Sample data
       const tabledata = [
         {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
         {id:2, name:"Bob", age:24, city:"Split", score:72},
         {id:3, name:"Carol", age:41, city:"Rijeka", score:95},
       ];
 
-      const table = new Tabulator("#table", {
+      // Initialize Tabulator
+      new Tabulator("#table", {
         data: tabledata,
-        layout:"fitColumns",
-        columns:[
+        layout: "fitColumns",
+        columns: [
           {title:"ID", field:"id", width:50},
           {title:"Name", field:"name", editor:"input"},
           {title:"Age", field:"age", editor:"number"},
@@ -46,7 +43,7 @@
           {title:"Score", field:"score", editor:"number"},
         ]
       });
-    };
+    });
   </script>
 </body>
 </html>
