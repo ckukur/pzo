@@ -10,37 +10,43 @@
 
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    #table { margin-top: 20px; }
+    #table { margin-top: 20px; height: 300px; }
+    .btn { padding:6px 12px; border-radius:4px; border:1px solid #ccc; margin-right:6px; cursor:pointer; }
   </style>
 </head>
 <body>
   <h1>Simple Tabulator Table</h1>
+
+  <div class="controls">
+    <button class="btn" onclick="alert('Button works')">Test Button</button>
+  </div>
+
   <div id="table"></div>
 
   <!-- Tabulator JS -->
   <script src="https://unpkg.com/tabulator-tables@6.3.3/dist/js/tabulator.min.js"></script>
 
   <script>
-    // Sample data
-    const tabledata = [
-      {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
-      {id:2, name:"Bob", age:24, city:"Split", score:72},
-      {id:3, name:"Carol", age:41, city:"Rijeka", score:95},
-    ];
+    // Ensure the table initializes after the page is fully loaded
+    window.onload = function() {
+      const tabledata = [
+        {id:1, name:"Alice", age:30, city:"Zagreb", score:88},
+        {id:2, name:"Bob", age:24, city:"Split", score:72},
+        {id:3, name:"Carol", age:41, city:"Rijeka", score:95},
+      ];
 
-    // Initialize Tabulator
-    const table = new Tabulator("#table", {
-      data: tabledata,
-      layout:"fitColumns",
-      height:"300px",
-      columns:[
-        {title:"ID", field:"id", width:50},
-        {title:"Name", field:"name", editor:"input"},
-        {title:"Age", field:"age", editor:"number"},
-        {title:"City", field:"city", editor:"input"},
-        {title:"Score", field:"score", editor:"number"},
-      ]
-    });
+      const table = new Tabulator("#table", {
+        data: tabledata,
+        layout:"fitColumns",
+        columns:[
+          {title:"ID", field:"id", width:50},
+          {title:"Name", field:"name", editor:"input"},
+          {title:"Age", field:"age", editor:"number"},
+          {title:"City", field:"city", editor:"input"},
+          {title:"Score", field:"score", editor:"number"},
+        ]
+      });
+    };
   </script>
 </body>
 </html>
